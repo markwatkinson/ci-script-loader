@@ -108,7 +108,7 @@ class Scripts {
   }
 
   private function _urlify($file) {
-    return preg_replace('%//+%', '/', $this->prefix . '/' . $file);
+    return preg_replace('%(?<!:)//+%', '/', $this->prefix . '/' . $file);
   }
 
   /**
