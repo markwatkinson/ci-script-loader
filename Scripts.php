@@ -107,6 +107,10 @@ class Scripts {
     return $this->_load_file('css', $name, $exact);
   }
 
+  private function _urlify($file) {
+    return preg_replace('%//+%', '/', $this->prefix . '/' . $file);
+  }
+
   /**
    * Gets the HTML to include the scheduled files
    * @param $concat If TRUE, the files are read and their contents written to
@@ -119,15 +123,17 @@ class Scripts {
     foreach($this->scripts as $s) {
       $output .= "<script type='text/javascript'";
       if ($concat) $output .= '>' . file_get_contents($s);
-      else $output .= " src='{$this->prefix}/$s'>";
+      else $output .= " src='" . $this->_urlify($s) . "'>";
       $output .= '</script>';
       $output .= "\n";
     }
     foreach($this->css as $c) {
       if ($concat) 
         $output .= "<style type='text/css'>" . file_get_contents($c) . "</style>";
-      else
-        $output .= "<link rel='stylesheet' type='text/css' href='{$this->prefix}/$c'>";
+      else {
+        $output .= "<link rel='stylesheet' type='text/css' href='";
+        $output .= $this->_urlify($c) . "'>";
+      }
       $output .= "\n";
     }
     return $output;
