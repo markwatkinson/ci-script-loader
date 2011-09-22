@@ -74,6 +74,7 @@ class Scripts {
     if (!in_array($type, array('js', 'css')))
       throw new InvalidArgumentException("Invalid type: $type");
     $search_path = ($type === 'js')? $this->script_dir : $this->css_dir;
+    $search_path = rtrim($search_path, '/');
     $matches = array();
     if (!$exact) {
       $pattern = "{$search_path}/*{$name}";
