@@ -53,8 +53,8 @@ class Scripts {
    * the document root is relative to it.
    */
   public function set_dir($type, $dir) {
-    if ($type === 'js') _set_script_dir($dir);
-    elseif ($type === 'css') _set_css_dir($dir);
+    if ($type === 'js') $this->_set_script_dir($dir);
+    elseif ($type === 'css') $this->_set_css_dir($dir);
     else throw new InvalidArgumentException("Invalid type: $type");
   }
   
