@@ -57,7 +57,10 @@ class Scripts {
     elseif ($type === 'css') $this->_set_css_dir($dir);
     else throw new InvalidArgumentException("Invalid type: $type");
   }
-  
+  private function has_extension($filename, $ext) {
+    $substr = substr($filename, strlen($filename) - strlen($ext));
+    return $substr === $ext;
+  }
   /**
    * Schedules loading of a script/CSS file,
    * @param $type 'js' or 'css'
@@ -67,16 +70,21 @@ class Scripts {
    *
    * @throws InvalidArgumentException if $type is neither 'css' nor 'js'
    */
-  private function _load_file($type, $name, $exact) {
+  private function _load_file($type, $name, $exact=false) {
     if (!in_array($type, array('js', 'css')))
       throw new InvalidArgumentException("Invalid type: $type");
     $search_path = ($type === 'js')? $this->script_dir : $this->css_dir;
     $matches = array();
     if (!$exact) {
-      $matches = glob($search_path . "/*$name*.$type");
+      $pattern = "{$search_path}/*{$name}";
+      if (!$this->has_extension($pattern, '.' . $type))
+        $pattern .= '*.' . $type;
+      $matches = glob($pattern);
     } else {
-      $path = $search_path . "/$name.$type";
-      if (file_exists())
+      $path = $search_path . '/' . $name;
+      if (!$this->has_extension($path, '.' . $type))
+        $path .= '.' . $type;
+      if (file_exists($path))
         $matches[] = $path;
     }
     if (empty($matches)) return false;
