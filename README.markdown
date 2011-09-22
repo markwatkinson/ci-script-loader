@@ -37,3 +37,7 @@ Then in your view:
 
 Note that the html function can take a single argument which if set to TRUE will
 output the contents of the included files, instead of using src/href attributes.
+
+## TODO
+
+  + It can't really handle subdirs unless the full path is given - globbing should be recursive
