@@ -78,21 +78,34 @@ class Scripts {
   private function _load_file($type, $name, $exact=false) {
     if (!in_array($type, array('js', 'css')))
       throw new InvalidArgumentException("Invalid type: $type");
-    $search_path = ($type === 'js')? $this->script_dir : $this->css_dir;
+    $use_asset_dir = mb_substr($name, 0, 2) !== './';
+    $search_path = $use_asset_dir ?
+        ($type === 'js')? $this->script_dir : $this->css_dir :
+        '';
+    if (!$use_asset_dir) {
+      // strip the ./
+      $name = mb_substr($name, 2);
+    }
     $search_path = rtrim($search_path, '/');
     $matches = array();
+    $path = '';
     if (!$exact) {
-      $pattern = "{$search_path}/*{$name}";
+      $pattern = $use_asset_dir ? "{$search_path}/*{$name}" : $name;
       if (!$this->has_extension($pattern, '.' . $type))
         $pattern .= '*.' . $type;
       $matches = glob($pattern);
     } else {
-      $path = $search_path . '/' . $name;
+      if ($use_asset_dir) {
+        $path = $search_path . '/' . $name;
+      } else {
+        $path = $name;
+      }
       if (!$this->has_extension($path, '.' . $type))
         $path .= '.' . $type;
       if (file_exists($path))
         $matches[] = $path;
     }
+
     if (empty($matches)) return false;
     else {
       if ($type === 'js') $this->scripts = array_merge($this->scripts, $matches);
@@ -138,7 +151,7 @@ class Scripts {
       $js_path = $this->_get_bundle_path('js');
 
       return file_exists($css_path) ?
-            ("<link rel='stylesheet' type='text/css' href='" .
+            ("<link rel='stylesheet' property='stylesheet' type='text/css' href='" .
             $this->_urlify($css_path) . "'>\n") : '' .
         file_exists($js_path) ?
             ("<script type='text/javascript' src='" .
@@ -158,7 +171,7 @@ class Scripts {
       if ($concat)
         $output .= "<style type='text/css'>" . file_get_contents($c) . "</style>";
       else {
-        $output .= "<link rel='stylesheet' type='text/css' href='";
+        $output .= "<link rel='stylesheet' property='stylesheet' type='text/css' href='";
         $output .= $this->_urlify($c) . "'>";
       }
       $output .= "\n";
