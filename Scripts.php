@@ -187,7 +187,7 @@ class Scripts {
     $bundle_timestamp = self::_get_mtime($bundle_path);
     if ($bundle_timestamp < $newest_timestamp) {
       // we are out of date - regenerate
-      $text = '';
+      $text = '/* Bundle created at ' . date(DATE_ISO8601) . "*/\n";
       foreach($files as $f) {
         $text .= file_get_contents($f) . "\n";
       }
