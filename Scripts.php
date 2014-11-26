@@ -7,11 +7,13 @@
  * includes, then from your view, echo the html() function's output.
  */
 class Scripts {
-  
+
   /// script (js) directory
   public $script_dir = 'assets/script';
   /// css directory
   public $css_dir = 'assets/css';
+  /// bundle directory (needs to be writable)
+  public $bundle_dir = 'assets/bundle';
 
   /**
    * URL prefix
@@ -25,6 +27,9 @@ class Scripts {
   private $scripts = array();
   /// CSS to be loaded
   private $css = array();
+
+  private $should_bundle = false;
+
 
   public function Scripts() {
     if (!function_exists('base_url')) {
@@ -95,7 +100,7 @@ class Scripts {
       return true;
     }
   }
-  
+
   /**
    * Schedules a JavaScript include
    * @param $name the filename
@@ -128,6 +133,19 @@ class Scripts {
    * @return A string of HTML to go in the head tag
    */
   public function html($concat = false) {
+    if ($this->should_bundle && $this->_create_bundles()) {
+      $css_path = $this->_get_bundle_path('css');
+      $js_path = $this->_get_bundle_path('js');
+
+      return file_exists($css_path) ?
+            ("<link rel='stylesheet' type='text/css' href='" .
+            $this->_urlify($css_path) . "'>\n") : '' .
+        file_exists($js_path) ?
+            ("<script type='text/javascript' src='" .
+            $this->_urlify($js_path) . "'></script>\n") : '';
+    }
+
+
     $output = '';
     foreach($this->scripts as $s) {
       $output .= "<script type='text/javascript'";
@@ -137,7 +155,7 @@ class Scripts {
       $output .= "\n";
     }
     foreach($this->css as $c) {
-      if ($concat) 
+      if ($concat)
         $output .= "<style type='text/css'>" . file_get_contents($c) . "</style>";
       else {
         $output .= "<link rel='stylesheet' type='text/css' href='";
@@ -146,5 +164,49 @@ class Scripts {
       $output .= "\n";
     }
     return $output;
+  }
+
+
+  public function should_bundle($o) {
+    $this->should_bundle = $o;
+  }
+
+  private static function _get_mtime($path) {
+    if (!file_exists($path)) return 0;
+    return filemtime($path);
+  }
+
+  private static function _check_bundle($bundle_path, $files) {
+    $newest_timestamp = 0;
+    foreach($files as $s) {
+      $mtime = self::_get_mtime($s);
+      if ($mtime > $newest_timestamp) {
+        $newest_timestamp = $mtime;
+      }
+    }
+    $bundle_timestamp = self::_get_mtime($bundle_path);
+    if ($bundle_timestamp < $newest_timestamp) {
+      // we are out of date - regenerate
+      $text = '';
+      foreach($files as $f) {
+        $text .= file_get_contents($f) . "\n";
+      }
+      return file_put_contents($bundle_path, $text, LOCK_EX) !== false;
+    }
+    return true;
+  }
+
+  private function _get_bundle_path($type) {
+    $map = array(
+        'css' => "{$this->bundle_dir}/app.css",
+        'js' => "{$this->bundle_dir}/app.js",
+    );
+    return $map[$type];
+  }
+
+  private function _create_bundles() {
+    return self::_check_bundle($this->_get_bundle_path('js'), $this->scripts) &&
+           self::_check_bundle($this->_get_bundle_path('css'), $this->css);
+
   }
 }
