@@ -105,7 +105,6 @@ class Scripts {
       if (file_exists($path))
         $matches[] = $path;
     }
-
     if (empty($matches)) return false;
     else {
       if ($type === 'js') $this->scripts = array_merge($this->scripts, $matches);
@@ -150,16 +149,18 @@ class Scripts {
       $css_path = $this->_get_bundle_path('css');
       $js_path = $this->_get_bundle_path('js');
 
-      return file_exists($css_path) ?
+      return "<!-- CSS bundle: -->\n" .
+      (file_exists($css_path) ?
             ("<link rel='stylesheet' property='stylesheet' type='text/css' href='" .
-            $this->_urlify($css_path) . "'>\n") : '' .
-        file_exists($js_path) ?
+            $this->_urlify($css_path) . "'>\n") : '<!-- No CSS to bundle! -->') .
+        "<!-- JS bundle: -->\n" .
+        (file_exists($js_path) ?
             ("<script type='text/javascript' src='" .
-            $this->_urlify($js_path) . "'></script>\n") : '';
+            $this->_urlify($js_path) . "'></script>\n") : '<!-- No JS to bundle! -->');
     }
 
 
-    $output = '';
+    $output = '<!-- Unbundled -->';
     foreach($this->scripts as $s) {
       $output .= "<script type='text/javascript'";
       if ($concat) $output .= '>' . file_get_contents($s);
